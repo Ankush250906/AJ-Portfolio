@@ -287,18 +287,23 @@
                 <div class="dashboard-actions">
                     <button type="submit" class="button primary">Upload / Replace Resume ↗</button>
                     {% if resume_available %}
-                        <a href="{{ url_for('static', filename='uploads/resume/resume.pdf') }}" class="button secondary" target="_blank" rel="noopener noreferrer">
+                        <a href="{{ url_for('uploaded_resume', filename='resume.pdf') }}" class="button secondary" target="_blank" rel="noopener noreferrer">
                             View Current Resume
                         </a>
                     {% endif %}
                 </div>
             </form>
 
-            {% if resume_available %}
+            {% if resume_uploaded %}
                 <div class="panel-header">
                     <form action="{{ url_for('delete_resume') }}" method="POST">
-                        <button type="submit" class="demo-delete-button">Remove Resume</button>
+                        <button type="submit" class="demo-delete-button">Remove Uploaded Resume</button>
                     </form>
+                </div>
+            {% elif resume_available %}
+                <div class="empty-state">
+                    <strong>Bundled resume is available</strong>
+                    It remains visible even if no replacement has been uploaded.
                 </div>
             {% else %}
                 <div class="empty-state">

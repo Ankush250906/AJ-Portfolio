@@ -25,7 +25,7 @@ environment settings so sessions stay valid across instances and deployments.
 The app does not change an existing admin password when these variables change;
 use the password reset procedure below to update it.
 
-## Render: keep certificates and resume after restart
+## Render: keep projects, certificates, and resume after restart
 
 Render's service filesystem is temporary unless a Persistent Disk is attached.
 Without a disk, SQLite updates and uploaded files can disappear after a restart
@@ -36,10 +36,16 @@ or deploy.
 2. Under **Environment**, add `DATA_DIR` with value `/var/data`, set a strong
    random `SECRET_KEY`, and set `ADMIN_USERNAME` and `ADMIN_PASSWORD` if this
    is the first admin account.
-3. Deploy the updated app. It stores `portfolio.db`, certificate images, and
-   the resume under that directory.
-4. Log in to `/admin/login`, add a certificate, then reload the service and
-   check that the certificate and image remain.
+3. Deploy the updated app. It stores the SQLite database (including live demo
+   projects), certificate images, and uploaded resume under that directory.
+4. In `/admin/login`, add a live demo under **Manage Portfolio Demos**; it
+   appears in the public **Projects** section. Upload a resume or certificate,
+   then reload the service and confirm the project and files remain.
+
+The repository's bundled `static/uploads/resume/resume.pdf` is shown whenever
+there is no uploaded replacement, so the public Resume section remains
+available even after a service restart. To keep a resume uploaded through the
+admin page across deploys and restarts, the Persistent Disk is required.
 
 If your current SQLite database or uploaded images are only on Render's
 temporary filesystem, back them up before changing the service or deploying.

@@ -74,6 +74,7 @@ CERTIFICATE_UPLOAD_PREFIX = "/static/uploads/certificates/"
 MAX_CERTIFICATE_SIZE = 5 * 1024 * 1024
 RESUME_UPLOAD_DIR = DATA_DIR / "uploads" / "resume"
 RESUME_UPLOAD_PATH = RESUME_UPLOAD_DIR / "resume.pdf"
+BUNDLED_RESUME_PATH = BASE_DIR / "static" / "uploads" / "resume" / "resume.pdf"
 MAX_RESUME_SIZE = 5 * 1024 * 1024
 
 
@@ -200,6 +201,8 @@ def uploaded_certificate(filename):
 
 @app.route("/static/uploads/resume/<path:filename>")
 def uploaded_resume(filename):
+    if filename == "resume.pdf" and not RESUME_UPLOAD_PATH.is_file():
+        return send_from_directory(BUNDLED_RESUME_PATH.parent, filename)
     return send_from_directory(RESUME_UPLOAD_DIR, filename)
 
 
@@ -212,7 +215,9 @@ def home():
         "index.html",
         demos=demos,
         certificates=certificates,
-        resume_available=RESUME_UPLOAD_PATH.is_file()
+        resume_available=(
+            RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
+        )
     )
 
 
@@ -417,7 +422,10 @@ def admin_dashboard():
         total_enquiries=len(enquiries),
         demos=demos,
         certificates=certificates,
-        resume_available=RESUME_UPLOAD_PATH.is_file()
+        resume_available=(
+            RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
+        ),
+        resume_uploaded=RESUME_UPLOAD_PATH.is_file()
     )
 
 
