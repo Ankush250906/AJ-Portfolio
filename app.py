@@ -190,6 +190,11 @@ def update_payment_status(client):
 
 @app.route("/static/uploads/certificates/<path:filename>")
 def uploaded_certificate(filename):
+    upload_path = CERTIFICATE_UPLOAD_DIR / filename
+    if not upload_path.is_file() and Path(filename).name == filename:
+        legacy_upload_dir = BASE_DIR / "static" / "uploads" / "certificates"
+        if (legacy_upload_dir / filename).is_file():
+            return send_from_directory(legacy_upload_dir, filename)
     return send_from_directory(CERTIFICATE_UPLOAD_DIR, filename)
 
 
