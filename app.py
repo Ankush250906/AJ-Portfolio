@@ -1,5 +1,7 @@
 
 import os
+import secrets
+import time
 from functools import wraps
 from pathlib import Path
 from uuid import uuid4
@@ -17,16 +19,46 @@ from werkzeug.security import (
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
-if not app.config["SECRET_KEY"]:
-    raise RuntimeError(
-        "Set the SECRET_KEY environment variable before starting the app."
-    )
-
-
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR))).expanduser().resolve()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+secret_key = os.environ.get("SECRET_KEY")
+if not secret_key:
+    secret_key_path = DATA_DIR / ".secret_key"
+    try:
+        secret_key = secret_key_path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        generated_secret = secrets.token_hex(32)
+        try:
+            secret_fd = os.open(
+                secret_key_path,
+                os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                0o600,
+            )
+            with os.fdopen(secret_fd, "w", encoding="utf-8") as secret_file:
+                secret_file.write(generated_secret)
+            secret_key = generated_secret
+        except FileExistsError:
+            for _ in range(50):
+                secret_key = secret_key_path.read_text(
+                    encoding="utf-8"
+                ).strip()
+                if secret_key:
+                    break
+                time.sleep(0.02)
+
+    if not secret_key:
+        raise RuntimeError(
+            f"Unable to read or create the Flask secret key at {secret_key_path}."
+        )
+    app.logger.warning(
+        "SECRET_KEY is not set; using a generated key from DATA_DIR. "
+        "Set SECRET_KEY in production for consistent sessions."
+    )
+
+app.config["SECRET_KEY"] = secret_key
+
 DATABASE_PATH = DATA_DIR / "portfolio.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (

@@ -790,6 +790,21 @@ a {
     color: var(--purple);
 }
 
+.footer-admin-login {
+    padding: 4px 9px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 10px;
+    line-height: 1.4;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.footer-admin-login:hover {
+    color: var(--purple);
+    border-color: rgba(167, 139, 250, 0.5);
+}
+
 .whatsapp-button {
     position: fixed;
     right: 24px;

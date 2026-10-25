@@ -7,11 +7,11 @@ enquiries.
 
 ## Run locally on Windows
 
-Open PowerShell in the project directory and set the required app and initial
-admin credentials before starting Flask:
+Open PowerShell in the project directory and set the initial admin credentials
+before starting Flask. The app generates a private secret key in its data
+directory when `SECRET_KEY` is not set:
 
 ```powershell
-$env:SECRET_KEY = python -c "import secrets; print(secrets.token_hex(32))"
 $env:ADMIN_USERNAME = "your-admin-name"
 $env:ADMIN_PASSWORD = "replace-with-a-unique-strong-password"
 python app.py
@@ -20,6 +20,8 @@ python app.py
 Keep the credentials private and do not commit them. On first startup, the app
 creates the database and the admin account when both admin variables are set.
 Open `http://127.0.0.1:5000/admin/login` and sign in with those credentials.
+For production, set a long random `SECRET_KEY` in the hosting provider's
+environment settings so sessions stay valid across instances and deployments.
 The app does not change an existing admin password when these variables change;
 use the password reset procedure below to update it.
 
@@ -31,7 +33,9 @@ or deploy.
 
 1. In the Render Dashboard, open your web service and add a **Persistent Disk**
    with mount path `/var/data`. Persistent disks may require a paid service plan.
-2. Under **Environment**, add `DATA_DIR` with value `/var/data`.
+2. Under **Environment**, add `DATA_DIR` with value `/var/data`, set a strong
+   random `SECRET_KEY`, and set `ADMIN_USERNAME` and `ADMIN_PASSWORD` if this
+   is the first admin account.
 3. Deploy the updated app. It stores `portfolio.db`, certificate images, and
    the resume under that directory.
 4. Log in to `/admin/login`, add a certificate, then reload the service and
