@@ -1,15 +1,44 @@
-# Publish on PythonAnywhere
+# Publish the portfolio
 
 This Flask app uses SQLite and stores uploaded resume/certificate files in
-`static/uploads`. Keep the database and uploads private when transferring them;
-the SQLite database can contain admin credentials and client enquiries.
+the configured data directory. Keep the database and uploads private when
+transferring them; the SQLite database can contain admin credentials and client
+enquiries.
+
+## Render: keep certificates and resume after restart
+
+Render's service filesystem is temporary unless a Persistent Disk is attached.
+Without a disk, SQLite updates and uploaded files can disappear after a restart
+or deploy.
+
+1. In the Render Dashboard, open your web service and add a **Persistent Disk**
+   with mount path `/var/data`. Persistent disks may require a paid service plan.
+2. Under **Environment**, add `DATA_DIR` with value `/var/data`.
+3. Deploy the updated app. It stores `portfolio.db`, certificate images, and
+   the resume under that directory.
+4. Log in to `/admin/login`, add a certificate, then reload the service and
+   check that the certificate and image remain.
+
+If your current SQLite database or uploaded images are only on Render's
+temporary filesystem, back them up before changing the service or deploying.
+The new persistent disk starts empty; upload the saved `portfolio.db` and files
+into `/var/data` (keeping the `uploads/certificates` and `uploads/resume`
+folders) before switching over. If the current data is already gone, add the
+certificate again after the persistent disk is mounted.
+
+If your Render plan does not support a Persistent Disk, use a managed database
+and durable object/file storage instead; setting `DATA_DIR` alone does not make
+temporary storage permanent.
+
+## PythonAnywhere
 
 ## 1. Prepare the app files
 
 Upload `app.py`, `requirements.txt`, the `templates` folder, the `static` folder,
-and `portfolio.db` to a private directory in your PythonAnywhere account, for
-example `/home/YOUR_USERNAME/portfolio`. Include any existing files under
-`static/uploads` that you want to keep on the live site.
+to a private directory in your PythonAnywhere account, for example
+`/home/YOUR_USERNAME/portfolio`. Put the database at
+`/home/YOUR_USERNAME/.local/share/portfolio/portfolio.db` and existing uploaded
+files in that data directory's `uploads` folder.
 
 Do not publish `portfolio.db`, secrets, or private client data in a public
 repository. Keep a backup of the database before deployment.
@@ -46,9 +75,13 @@ if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
 
 os.environ["SECRET_KEY"] = "PASTE_A_NEW_RANDOM_SECRET_HERE"
+os.environ["DATA_DIR"] = "/home/YOUR_USERNAME/.local/share/portfolio"
 
 from app import app as application
 ```
+
+Create the data directory before reloading the web app. Keep the existing
+`portfolio.db` and uploaded files there.
 
 Generate a secret key in a Bash console with:
 
@@ -56,16 +89,15 @@ Generate a secret key in a Bash console with:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Paste the output into the WSGI configuration. Keep `portfolio.db` in the app
-directory so the existing admin account and portfolio data are available.
+Paste the output into the WSGI configuration.
 
 ## 4. Set up the live site
 
 1. In the **Web** tab, set the source code directory to
    `/home/YOUR_USERNAME/portfolio`.
 2. Set the virtualenv path to the virtual environment created above.
-3. Check that the app directory contains `portfolio.db` and the required files
-   under `static/uploads`.
+3. Check that `DATA_DIR` contains `portfolio.db` and the required files under
+   `uploads`.
 4. Click **Reload** in the **Web** tab and open the assigned site URL.
 5. Test the homepage, `/admin/login`, the resume, certificate images, and demo
    links. Change the admin password before sharing the site publicly.
@@ -78,6 +110,8 @@ new password without echoing it or putting it in shell history:
 cd /home/YOUR_USERNAME/portfolio
 workon portfolio
 SECRET_KEY=temporary-console-key python - <<'PY'
+import os
+os.environ["DATA_DIR"] = "/home/YOUR_USERNAME/.local/share/portfolio"
 import getpass
 import app
 

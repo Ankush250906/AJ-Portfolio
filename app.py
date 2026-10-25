@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 from flask import (
     Flask, render_template, request,
-    redirect, url_for, flash, session
+    redirect, url_for, flash, session, send_from_directory
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,29 +25,22 @@ if not app.config["SECRET_KEY"]:
 
 
 BASE_DIR = Path(__file__).resolve().parent
-
-DATABASE_DIR = Path("/home/ankushjorvekar/.local/share/portfolio")
-DATABASE_DIR.mkdir(parents=True, exist_ok=True)
-
-DATABASE_PATH = DATABASE_DIR / "portfolio.db"
+DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR))).expanduser().resolve()
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_PATH = DATA_DIR / "portfolio.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     "sqlite:///" + str(DATABASE_PATH)
 )
-
-DATABASE_PATH = "/home/ankushjorvekar/.local/share/portfolio/portfolio.db"
-
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "sqlite:///" + DATABASE_PATH
-)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024
 
 db = SQLAlchemy(app)
 
-CERTIFICATE_UPLOAD_DIR = Path(app.static_folder) / "uploads" / "certificates"
+CERTIFICATE_UPLOAD_DIR = DATA_DIR / "uploads" / "certificates"
 CERTIFICATE_UPLOAD_PREFIX = "/static/uploads/certificates/"
 MAX_CERTIFICATE_SIZE = 5 * 1024 * 1024
-RESUME_UPLOAD_DIR = Path(app.static_folder) / "uploads" / "resume"
+RESUME_UPLOAD_DIR = DATA_DIR / "uploads" / "resume"
 RESUME_UPLOAD_PATH = RESUME_UPLOAD_DIR / "resume.pdf"
 MAX_RESUME_SIZE = 5 * 1024 * 1024
 
@@ -161,6 +154,16 @@ def update_payment_status(client):
         client.payment_status = "Partial"
 
     return total_received
+
+
+@app.route("/static/uploads/certificates/<path:filename>")
+def uploaded_certificate(filename):
+    return send_from_directory(CERTIFICATE_UPLOAD_DIR, filename)
+
+
+@app.route("/static/uploads/resume/<path:filename>")
+def uploaded_resume(filename):
+    return send_from_directory(RESUME_UPLOAD_DIR, filename)
 
 
 
