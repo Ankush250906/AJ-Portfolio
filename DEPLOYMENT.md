@@ -5,6 +5,24 @@ the configured data directory. Keep the database and uploads private when
 transferring them; the SQLite database can contain admin credentials and client
 enquiries.
 
+## Run locally on Windows
+
+Open PowerShell in the project directory and set the required app and initial
+admin credentials before starting Flask:
+
+```powershell
+$env:SECRET_KEY = python -c "import secrets; print(secrets.token_hex(32))"
+$env:ADMIN_USERNAME = "your-admin-name"
+$env:ADMIN_PASSWORD = "replace-with-a-unique-strong-password"
+python app.py
+```
+
+Keep the credentials private and do not commit them. On first startup, the app
+creates the database and the admin account when both admin variables are set.
+Open `http://127.0.0.1:5000/admin/login` and sign in with those credentials.
+The app does not change an existing admin password when these variables change;
+use the password reset procedure below to update it.
+
 ## Render: keep certificates and resume after restart
 
 Render's service filesystem is temporary unless a Persistent Disk is attached.
