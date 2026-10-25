@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Payment History | Ankush CRM</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .payment-main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .payment-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .payment-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .payment-stat span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .payment-stat h3 {
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .payment-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .payment-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .payment-form input,
+        .payment-form select,
+        .payment-form textarea {
+            width: 100%;
+            padding: 12px;
+            color: var(--text);
+            background: #0b0b13;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .payment-form textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .payment-full {
+            grid-column: 1 / -1;
+        }
+
+        .payment-table-wrap {
+            overflow-x: auto;
+        }
+
+        .payment-table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+        }
+
+        .payment-table th,
+        .payment-table td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .payment-table th {
+            color: var(--muted);
+        }
+
+        .payment-empty {
+            padding: 25px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        @media (max-width: 650px) {
+            .payment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-form {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-full {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="crm-topbar">
+    <a href="{{ url_for('home') }}" class="logo">
+        Ankush<span>.</span>
+    </a>
+
+    <div class="actions">
+        <a href="{{ url_for('clients') }}"
+           class="button secondary">
+            ← All Clients
+        </a>
+
+        <a href="{{ url_for('admin_dashboard') }}"
+           class="button secondary">
+            Dashboard
+        </a>
+    </div>
+</header>
+
+<main class="payment-main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="flash-message {{ category }}">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="payment-header">
+        <div>
+            <p class="eyebrow">FREELANCING / PAYMENTS</p>
+            <h1>Payment History</h1>
+            <p class="crm-muted">
+                Client: <strong>{{ client.name }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <section class="payment-grid">
+
+        <div class="payment-stat">
+            <span>TOTAL DEAL AMOUNT</span>
+            <h3>₹{{ "%.2f"|format(client.deal_amount or 0) }}</h3>
+        </div>
+
+        <div class="payment-stat">
+            <span>TOTAL PAYMENTS RECORDED</span>
+            <h3>₹{{ "%.2f"|format(total_paid) }}</h3>
+        </div>
+
+        <div class="payment-stat">
+            <span>OUTSTANDING BALANCE</span>
+            <h3>₹{{ "%.2f"|format(outstanding) }}</h3>
+        </div>
+
+    </section>
+
+    <section class="payment-card">
+        <h2 style="margin-bottom: 22px;">Record New Payment</h2>
+
+        <form method="POST" class="payment-form">
+
+            <div>
+                <label for="amount">Payment Amount (₹) *</label>
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="e.g. 2500"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="payment_date">Payment Date *</label>
+                <input
+                    type="date"
+                    id="payment_date"
+                    name="payment_date"
+                    value="{{ today or '' }}"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="method">Payment Method</label>
+                <select id="method" name="method">
+                    <option value="UPI">UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Other" selected>Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="reference">Transaction Reference</label>
+                <input
+                    type="text"
+                    id="reference"
+                    name="reference"
+                    placeholder="UPI transaction ID (optional)"
+                >
+            </div>
+
+            <div class="payment-full">
+                <label for="notes">Payment Notes</label>
+                <textarea
+                    id="notes"
+                    name="notes"
+                    placeholder="Additional payment details..."
+                ></textarea>
+            </div>
+
+            <div class="payment-full">
+                <button type="submit" class="button primary">
+                    + Record Payment
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+    <section class="payment-card">
+        <h2 style="margin-bottom: 20px;">Transaction History</h2>
+
+        {% if payments %}
+            <div class="payment-table-wrap">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date }}</td>
+
+                                <td>
+                                    <strong>
+                                        ₹{{ "%.2f"|format(payment.amount) }}
+                                    </strong>
+                                </td>
+
+                                <td>{{ payment.method or 'Other' }}</td>
+
+                                <td>{{ payment.reference or '—' }}</td>
+
+                                <td>{{ payment.notes or '—' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="payment-empty">
+                <h3>No payments recorded yet</h3>
+                <p>Record the first payment using the form above.</p>
+            </div>
+        {% endif %}
+    </section>
+
+</main>
+
+</body>
+</html>

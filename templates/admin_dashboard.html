@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ankush Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .dashboard-layout {
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 22px 5%;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dashboard-main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 45px 24px 70px;
+        }
+
+        .dashboard-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-heading h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(28px, 4vw, 38px);
+        }
+
+        .dashboard-heading p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .dashboard-stat {
+            min-width: 200px;
+            padding: 22px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+        }
+
+        .dashboard-stat span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dashboard-stat strong {
+            display: block;
+            color: var(--purple);
+            font-size: 34px;
+            margin-top: 8px;
+        }
+
+        .enquiries-panel {
+            margin-top: 25px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            font-size: 18px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .enquiries-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .enquiries-table th,
+        .enquiries-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        .enquiries-table th {
+            color: var(--muted);
+            font-weight: 600;
+            background: rgba(255,255,255,.02);
+        }
+
+        .enquiries-table td {
+            overflow-wrap: anywhere;
+        }
+
+        .enquiries-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .enquiry-name {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .enquiry-email {
+            color: var(--purple);
+        }
+
+        .message-cell {
+            min-width: 220px;
+            max-width: 340px;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            padding: 45px 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty-state strong {
+            display: block;
+            color: var(--text);
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+
+        .logout-button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-flashes {
+            margin-bottom: 20px;
+        }
+
+        .demo-form {
+            padding: 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .demo-form .form-group {
+            margin-bottom: 16px;
+        }
+
+        .demo-form .button {
+            cursor: pointer;
+        }
+
+        .demo-delete-button {
+            padding: 8px 12px;
+            color: var(--text);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .demo-delete-button:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        .certificate-delete-button {
+            padding: 8px 12px;
+            color: var(--text);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .certificate-delete-button:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-main {
+                padding: 30px 15px 50px;
+            }
+
+            .dashboard-header {
+                padding: 18px 20px;
+            }
+
+            .dashboard-stat {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <header class="dashboard-header">
+        <a href="{{ url_for('home') }}" class="logo">Ankush<span>.</span></a>
+
+        <div class="dashboard-actions">
+            <span style="color: var(--muted); font-size: 13px;">
+                Admin: {{ session.get('admin_username', 'Admin') }}
+            </span>
+
+            <form action="{{ url_for('admin_logout') }}" method="POST">
+                <button type="submit" class="button logout-button">
+                    Logout ↗
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="dashboard-flashes">
+                    {% for category, message in messages %}
+                        <p class="flash-message {{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-heading">
+            <div>
+                <p class="eyebrow">ADMINISTRATION / OVERVIEW</p>
+                <h1>Dashboard</h1>
+                <p>Welcome back! Here are your latest client enquiries.</p>
+            </div>
+
+            <a href="{{ url_for('home') }}" class="button secondary">
+                View Portfolio ↗
+            </a>
+
+            <a href="{{ url_for('clients') }}" class="button primary">
+              Manage Clients ↗
+            </a>
+
+        </div>
+
+        <section class="dashboard-stat">
+            <span>Total Client Enquiries</span>
+            <strong>{{ total_enquiries }}</strong>
+        </section>
+
+        <section class="enquiries-panel">
+            <div class="panel-header">
+                <h2>Manage Resume</h2>
+                <p>Upload your PDF resume here. It will be shown in the public portfolio after upload. Maximum file size: 5 MB.</p>
+            </div>
+
+            <form action="{{ url_for('upload_resume') }}" method="POST" enctype="multipart/form-data" class="demo-form">
+                <div class="form-group">
+                    <label for="resume-file">Resume PDF</label>
+                    <input id="resume-file" name="resume" type="file" accept="application/pdf,.pdf" required>
+                </div>
+                <div class="dashboard-actions">
+                    <button type="submit" class="button primary">Upload / Replace Resume ↗</button>
+                    {% if resume_available %}
+                        <a href="{{ url_for('static', filename='uploads/resume/resume.pdf') }}" class="button secondary" target="_blank" rel="noopener noreferrer">
+                            View Current Resume
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% if resume_available %}
+                <div class="panel-header">
+                    <form action="{{ url_for('delete_resume') }}" method="POST">
+                        <button type="submit" class="demo-delete-button">Remove Resume</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <strong>No resume uploaded</strong>
+                    Upload a PDF to enable the public View and Download buttons.
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="enquiries-panel">
+            <div class="panel-header">
+                <h2>Manage Portfolio Demos</h2>
+                <p>Add a hosted website URL to show its preview in Projects. Some websites block embedded previews; visitors can still open those demos in a new tab.</p>
+            </div>
+
+            <form action="{{ url_for('add_demo') }}" method="POST" class="demo-form">
+                <div class="form-group">
+                    <label for="demo-title">Demo name</label>
+                    <input id="demo-title" name="title" type="text" maxlength="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="demo-description">Description</label>
+                    <textarea id="demo-description" name="description" rows="3" maxlength="500" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="demo-url">Live demo URL</label>
+                    <input id="demo-url" name="url" type="url" maxlength="2048" placeholder="https://example.com" required>
+                </div>
+                <button type="submit" class="button primary">Add Demo ↗</button>
+            </form>
+
+            {% if demos %}
+                <div class="table-wrap">
+                    <table class="enquiries-table">
+                        <thead>
+                            <tr>
+                                <th>Demo</th>
+                                <th>Description</th>
+                                <th>Live URL</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demo in demos %}
+                                <tr>
+                                    <td class="enquiry-name">{{ demo.title }}</td>
+                                    <td>{{ demo.description }}</td>
+                                    <td>
+                                        <a class="enquiry-email" href="{{ demo.url }}" target="_blank" rel="noopener noreferrer">
+                                            Open demo ↗
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('delete_demo', demo_id=demo.id) }}" method="POST">
+                                            <button type="submit" class="demo-delete-button">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <strong>No demos added yet</strong>
+                    Add a live website URL above to display it in your portfolio.
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="enquiries-panel">
+            <div class="panel-header">
+                <h2>Manage Certificates</h2>
+                <p>Upload a JPG, PNG, GIF, or WebP certificate image (5 MB max) to show it in the portfolio.</p>
+            </div>
+
+            <form action="{{ url_for('add_certificate') }}" method="POST" enctype="multipart/form-data" class="demo-form">
+                <div class="form-group">
+                    <label for="certificate-title">Certificate name</label>
+                    <input id="certificate-title" name="title" type="text" maxlength="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificate-issuer">Issued by</label>
+                    <input id="certificate-issuer" name="issuer" type="text" maxlength="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="certificate-year">Year (optional)</label>
+                    <input id="certificate-year" name="year" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2026">
+                </div>
+                <div class="form-group">
+                    <label for="certificate-image">Upload certificate image</label>
+                    <input id="certificate-image" name="image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" required>
+                </div>
+                <button type="submit" class="button primary">Upload Certificate ↗</button>
+            </form>
+
+            {% if certificates %}
+                <div class="table-wrap">
+                    <table class="enquiries-table">
+                        <thead>
+                            <tr>
+                                <th>Certificate</th>
+                                <th>Issuer</th>
+                                <th>Year</th>
+                                <th>URL</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for certificate in certificates %}
+                                <tr>
+                                    <td class="enquiry-name">{{ certificate.title }}</td>
+                                    <td>{{ certificate.issuer }}</td>
+                                    <td>{{ certificate.year or '—' }}</td>
+                                    <td>
+                                        <a class="enquiry-email" href="{{ certificate.url }}" target="_blank" rel="noopener noreferrer">
+                                            View certificate ↗
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('delete_certificate', certificate_id=certificate.id) }}" method="POST">
+                                            <button type="submit" class="certificate-delete-button">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <strong>No certificates added yet</strong>
+                    Add a certificate URL above to show it in your portfolio.
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="enquiries-panel">
+            <div class="panel-header">
+                <h2>Client Enquiries</h2>
+            </div>
+
+            {% if enquiries %}
+                <div class="table-wrap">
+                    <table class="enquiries-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enquiry in enquiries %}
+                                <tr>
+                                    <td>#{{ enquiry.id }}</td>
+                                    <td>
+                                        <div class="enquiry-name">{{ enquiry.name }}</div>
+                                        <a class="enquiry-email"
+                                           href="mailto:{{ enquiry.email }}">
+                                            {{ enquiry.email }}
+                                        </a>
+                                    </td>
+                                    <td>{{ enquiry.subject or 'General enquiry' }}</td>
+                                    <td class="message-cell">{{ enquiry.message }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <strong>No enquiries yet</strong>
+                    Messages submitted through your portfolio contact form will appear here.
+                </div>
+            {% endif %}
+        </section>
+
+    </main>
+
+</div>
+</body>
+</html>

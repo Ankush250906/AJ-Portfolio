@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Client | Ankush CRM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .edit-page { max-width:850px; margin:auto; padding:45px 24px 70px; }
+        .edit-card { padding:30px; background:var(--surface); border:1px solid var(--border); border-radius:18px; }
+        .edit-card h1 { font-family:'Space Grotesk',sans-serif; font-size:32px; margin-bottom:8px; }
+        .intro { color:var(--muted); font-size:14px; margin-bottom:28px; }
+        .edit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; }
+        .edit-grid .full { grid-column:1/-1; }
+        .edit-grid input, .edit-grid select, .edit-grid textarea {
+            width:100%; box-sizing:border-box; padding:13px 14px;
+            color:var(--text); background:#0b0b13;
+            border:1px solid var(--border); border-radius:9px;
+        }
+        .edit-grid label { display:block; margin-bottom:8px; }
+        .form-group { margin-bottom:18px; }
+        .edit-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+        @media(max-width:600px) {
+            .edit-page { padding:30px 15px; }
+            .edit-card { padding:22px; }
+            .edit-grid { grid-template-columns:1fr; }
+            .edit-grid .full { grid-column:auto; }
+            .edit-card h1 { font-size:27px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="crm-topbar">
+        <a href="{{ url_for('home') }}" class="logo">Ankush<span>.</span></a>
+        <div class="actions">
+            <a href="{{ url_for('clients') }}" class="button secondary">← Clients</a>
+        </div>
+    </header>
+
+    <main class="edit-page">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="flash-message {{ category }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="edit-card">
+            <p class="eyebrow">CLIENT MANAGEMENT / EDIT RECORD</p>
+            <h1>Edit Client</h1>
+            <p class="intro">Update the information for {{ client.name }}.</p>
+
+            <form method="POST" action="{{ url_for('edit_client', client_id=client.id) }}">
+                <div class="edit-grid">
+                    <div class="form-group">
+                        <label for="name">Client Name *</label>
+                        <input id="name" name="name" required maxlength="120"
+                               value="{{ client.name }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="business">Business Name</label>
+                        <input id="business" name="business" maxlength="150"
+                               value="{{ client.business or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input id="phone" name="phone" maxlength="20"
+                               value="{{ client.phone or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" maxlength="120"
+                               value="{{ client.email or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service">Service / Project</label>
+                        <input id="service" name="service" maxlength="150"
+                               value="{{ client.service or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lead_source">Lead Source</label>
+                        <select id="lead_source" name="lead_source">
+                            <option value="">Select source</option>
+                            {% for source in ['WhatsApp', 'Instagram', 'Facebook', 'Referral', 'Freelancing Platform', 'Direct Contact', 'Other'] %}
+                                <option value="{{ source }}"
+                                    {% if client.lead_source == source %}selected{% endif %}>
+                                    {{ source }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deal_amount">Deal Amount (₹)</label>
+                        <input id="deal_amount" name="deal_amount" type="number"
+                               min="0" step="0.01"
+                               value="{{ client.deal_amount or 0 }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="advance_paid">Advance Paid (₹)</label>
+                        <input id="advance_paid" name="advance_paid" type="number"
+                               min="0" step="0.01"
+                               value="{{ client.advance_paid or 0 }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Client Status</label>
+                        <select id="status" name="status">
+                            {% for status in ['New Lead', 'Contacted', 'Negotiation', 'Won', 'Lost'] %}
+                                <option value="{{ status }}"
+                                    {% if client.status == status %}selected{% endif %}>
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_status">Payment Status</label>
+                        <select id="payment_status" name="payment_status">
+                            {% for status in ['Pending', 'Partial', 'Paid'] %}
+                                <option value="{{ status }}"
+                                    {% if client.payment_status == status %}selected{% endif %}>
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="follow_up_date">Follow-up Date</label>
+                        <input id="follow_up_date" name="follow_up_date"
+                               type="date" value="{{ client.follow_up_date or '' }}">
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="4">{{ client.notes or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="edit-actions">
+                    <button type="submit" class="button primary">Save Changes ↗</button>
+                    <a href="{{ url_for('clients') }}" class="button secondary">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

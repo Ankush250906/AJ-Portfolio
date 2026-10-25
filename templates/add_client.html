@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Client | Ankush CRM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .form-page { max-width:850px; margin:auto; padding:45px 24px 70px; }
+        .form-card { padding:30px; background:var(--surface); border:1px solid var(--border); border-radius:18px; }
+        .form-card h1 { font-family:'Space Grotesk',sans-serif; font-size:32px; margin-bottom:8px; }
+        .form-intro { color:var(--muted); font-size:14px; margin-bottom:28px; }
+        .crm-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; }
+        .crm-form-grid .full-width { grid-column:1/-1; }
+        .crm-form-grid select,
+        .crm-form-grid input,
+        .crm-form-grid textarea {
+            width:100%; box-sizing:border-box; padding:13px 14px;
+            color:var(--text); background:#0b0b13;
+            border:1px solid var(--border); border-radius:9px;
+        }
+        .crm-form-grid label { display:block; margin-bottom:8px; }
+        .form-group { margin-bottom:18px; }
+        .form-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+        .crm-errors { margin-bottom:20px; }
+        @media(max-width:600px) {
+            .form-page { padding:30px 15px; }
+            .form-card { padding:22px; }
+            .crm-form-grid { grid-template-columns:1fr; }
+            .crm-form-grid .full-width { grid-column:auto; }
+            .form-card h1 { font-size:27px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="crm-topbar">
+        <a href="{{ url_for('home') }}" class="logo">Ankush<span>.</span></a>
+        <div class="actions">
+            <a href="{{ url_for('clients') }}" class="button secondary">← Back to Clients</a>
+        </div>
+    </header>
+
+    <main class="form-page">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="crm-errors">
+                    {% for category, message in messages %}
+                        <p class="flash-message {{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="form-card">
+            <p class="eyebrow">CLIENT MANAGEMENT / NEW RECORD</p>
+            <h1>Add New Client</h1>
+            <p class="form-intro">Save client details, deal value and your next follow-up.</p>
+
+            <form method="POST" action="{{ url_for('add_client') }}">
+                <div class="crm-form-grid">
+                    <div class="form-group">
+                        <label for="name">Client Name *</label>
+                        <input id="name" name="name" required maxlength="120" placeholder="Client's full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="business">Business Name</label>
+                        <input id="business" name="business" maxlength="150" placeholder="Business or company">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input id="phone" name="phone" type="tel" maxlength="20" placeholder="Contact number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input id="email" name="email" type="email" maxlength="120" placeholder="client@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service">Service / Project</label>
+                        <input id="service" name="service" maxlength="150" placeholder="Business website">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lead_source">Lead Source</label>
+                        <select id="lead_source" name="lead_source">
+                            <option value="">Select source</option>
+                            <option>WhatsApp</option>
+                            <option>Instagram</option>
+                            <option>Facebook</option>
+                            <option>Referral</option>
+                            <option>Freelancing Platform</option>
+                            <option>Direct Contact</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deal_amount">Total Deal Amount (₹)</label>
+                        <input id="deal_amount" name="deal_amount" type="number" min="0" step="0.01" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="advance_paid">Advance Paid (₹)</label>
+                        <input id="advance_paid" name="advance_paid" type="number" min="0" step="0.01" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Client Status</label>
+                        <select id="status" name="status">
+                            <option>New Lead</option>
+                            <option>Contacted</option>
+                            <option>Negotiation</option>
+                            <option>Won</option>
+                            <option>Lost</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_status">Payment Status</label>
+                        <select id="payment_status" name="payment_status">
+                            <option>Pending</option>
+                            <option>Partial</option>
+                            <option>Paid</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="follow_up_date">Next Follow-up Date</label>
+                        <input id="follow_up_date" name="follow_up_date" type="date">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="4" placeholder="Client requirements, discussion details, next steps..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="button primary">Save Client ↗</button>
+                    <a href="{{ url_for('clients') }}" class="button secondary">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

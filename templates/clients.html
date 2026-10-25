@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Clients | Ankush CRM</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .crm-main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 45px 24px;
+        }
+
+        .crm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .crm-header h1 {
+            font-size: 34px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .crm-header p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .crm-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .crm-card h2 {
+            font-size: 18px;
+            padding: 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .crm-table-wrap {
+            overflow-x: auto;
+        }
+
+        .crm-table {
+            width: 100%;
+            min-width: 1000px;
+            border-collapse: collapse;
+        }
+
+        .crm-table th,
+        .crm-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .crm-table th {
+            color: var(--muted);
+        }
+
+        .crm-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .crm-table td {
+            overflow-wrap: anywhere;
+        }
+
+        .crm-muted {
+            color: var(--muted);
+        }
+
+        .crm-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .crm-topbar {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-wrap: wrap;
+        }
+
+        .crm-topbar .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .crm-flash {
+            margin-bottom: 20px;
+        }
+
+        .crm-search {
+            width: 100%;
+            padding: 13px 15px;
+            background: #0b0b13;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+        }
+
+        .crm-action-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            min-width: 100px;
+        }
+
+        .crm-action-buttons form {
+            margin: 0;
+        }
+
+        .crm-action-buttons .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .crm-main {
+                padding: 30px 15px;
+            }
+
+            .crm-header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="crm-topbar">
+    <a href="{{ url_for('home') }}" class="logo">
+        Ankush<span>.</span>
+    </a>
+
+    <div class="actions">
+        <a href="{{ url_for('admin_dashboard') }}"
+           class="button secondary">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('add_client') }}"
+           class="button primary">
+            + Add Client
+        </a>
+    </div>
+</header>
+
+<main class="crm-main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="crm-flash">
+                {% for category, message in messages %}
+                    <p class="flash-message {{ category }}">
+                        {{ message }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="crm-header">
+        <div>
+            <p class="eyebrow">FREELANCING / CRM</p>
+            <h1>My Clients</h1>
+            <p>Manage your clients and track your business relationships.</p>
+        </div>
+
+        <a href="{{ url_for('add_client') }}"
+           class="button primary">
+            + Add New Client
+        </a>
+    </div>
+
+    <!-- Payment and Follow-up Summary -->
+    <section class="skills-grid" style="margin-bottom: 25px;">
+
+        <div class="skill-card">
+            <span>TOTAL DEALS</span>
+            <h3>₹{{ "%.2f"|format(payment_summary.total_deal) }}</h3>
+        </div>
+
+        <div class="skill-card">
+            <span>ADVANCE RECEIVED</span>
+            <h3>₹{{ "%.2f"|format(payment_summary.total_advance) }}</h3>
+        </div>
+
+        <div class="skill-card">
+            <span>PAYMENT OUTSTANDING</span>
+            <h3>₹{{ "%.2f"|format(payment_summary.total_outstanding) }}</h3>
+        </div>
+
+        <div class="skill-card">
+            <span>FOLLOW-UPS DUE</span>
+            <h3>{{ due_followups|length }}</h3>
+        </div>
+
+    </section>
+
+    <!-- Follow-ups Due -->
+    <section class="crm-card" style="margin-bottom: 25px;">
+
+        <h2>Follow-ups Due</h2>
+
+        {% if due_followups %}
+            <div class="crm-table-wrap">
+                <table class="crm-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Phone</th>
+                            <th>Follow-up Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for client in due_followups %}
+                            <tr>
+                                <td>{{ client.name }}</td>
+                                <td>{{ client.phone or '—' }}</td>
+                                <td>{{ client.follow_up_date }}</td>
+                                <td>{{ client.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="crm-empty">
+                No follow-ups due today.
+            </div>
+        {% endif %}
+
+    </section>
+
+    <!-- All Clients -->
+    <section class="crm-card">
+
+        <div style="padding: 18px 22px;">
+            <input
+                id="clientSearch"
+                class="crm-search"
+                type="search"
+                placeholder="Search by client, business, email or phone..."
+                aria-label="Search clients"
+            >
+        </div>
+
+        <h2>All Clients ({{ clients|length }})</h2>
+
+        {% if clients %}
+            <div class="crm-table-wrap">
+                <table class="crm-table">
+
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Contact</th>
+                            <th>Service</th>
+                            <th>Deal Amount</th>
+                            <th>Advance</th>
+                            <th>Status</th>
+                            <th>Follow-up</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for client in clients %}
+                            <tr>
+                                <td>
+                                    <strong>{{ client.name }}</strong>
+                                    <br>
+                                    <span class="crm-muted">
+                                        {{ client.business or 'No business name' }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if client.phone %}
+                                        {{ client.phone }}<br>
+                                    {% endif %}
+
+                                    {% if client.email %}
+                                        {{ client.email }}
+                                    {% else %}
+                                        <span class="crm-muted">No email</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ client.service or '—' }}</td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(client.deal_amount or 0) }}
+                                </td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(client.advance_paid or 0) }}
+                                </td>
+
+                                <td>{{ client.status }}</td>
+
+                                <td>{{ client.follow_up_date or '—' }}</td>
+
+                                <!-- Edit, Delete and Payments Buttons -->
+                                <td>
+                                    <div class="crm-action-buttons">
+
+                                        <a
+                                            class="button secondary"
+                                            href="{{ url_for('edit_client', client_id=client.id) }}"
+                                        >
+                                            Edit
+                                        </a>
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for('delete_client', client_id=client.id) }}"
+                                            onsubmit="return confirm('Delete this client permanently?');"
+                                        >
+                                            <button
+                                                type="submit"
+                                                class="button secondary"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+
+                                        <a
+                                            class="button secondary"
+                                            href="{{ url_for('client_payments', client_id=client.id) }}"
+                                        >
+                                            Payments ↗
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        {% else %}
+            <div class="crm-empty">
+                <h3>No clients added yet</h3>
+                <p>Add your first client to start using your freelancing CRM.</p>
+                <br>
+
+                <a href="{{ url_for('add_client') }}"
+                   class="button primary">
+                    Add First Client
+                </a>
+            </div>
+        {% endif %}
+
+    </section>
+
+</main>
+
+<script>
+    const searchInput = document.getElementById("clientSearch");
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
+
+        document.querySelectorAll(".crm-table tbody tr").forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(query)
+                ? ""
+                : "none";
+        });
+    });
+</script>
+
+</body>
+</html>
