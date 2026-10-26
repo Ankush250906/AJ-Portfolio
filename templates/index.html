@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Ankush Jorvekar - Web Developer building modern, responsive websites.">
-    <title>Ankush Jorvekar | Web Developer</title>
+    <meta name="description" content="{{ site.meta_description }}">
+    <title>{{ site.hero_name }} | {{ site.hero_role }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -30,15 +30,14 @@
     <main>
         <section id="home" class="hero section">
             <div class="hero-content">
-                <p class="eyebrow"><span class="status-dot"></span> AVAILABLE FOR FREELANCE WORK</p>
+                <p class="eyebrow"><span class="status-dot"></span> {{ site.hero_status }}</p>
 
-                <h1>Hi, I'm <span>Ankush Jorvekar.</span></h1>
+                <h1>{{ site.hero_intro }} <span>{{ site.hero_name }}</span></h1>
 
-                <h2>I build modern digital experiences.</h2>
+                <h2>{{ site.hero_role }}</h2>
 
                 <p class="hero-description">
-                    I'm a web developer creating responsive, user-friendly
-                    websites that help businesses build their online presence.
+                    {{ site.hero_description }}
                 </p>
 
                 <div class="hero-buttons">
@@ -47,15 +46,15 @@
                 </div>
 
                 <div class="hero-tags">
-                    <span>Web Development</span>
-                    <span>UI Design</span>
-                    <span>Problem Solving</span>
+                    {% for tag in site.hero_tag_items %}
+                        <span>{{ tag }}</span>
+                    {% endfor %}
                 </div>
             </div>
 
             <div class="hero-photo">
                 <img
-                src="{{ url_for('static', filename='css/image/Profile.jpeg') }}"
+                src="{% if site.profile_image %}{{ url_for('uploaded_profile_image', filename=site.profile_image) }}{% else %}{{ url_for('static', filename='css/image/Profile.jpeg') }}{% endif %}"
                 alt="Ankush Jorvekar"
                 class="profile-photo"
                 >
@@ -75,8 +74,8 @@
 
                     <div class="code-preview">
                         <p><span class="code-purple">const</span> developer = {</p>
-                        <p class="indent">name: <span class="code-green">'Ankush'</span>,</p>
-                        <p class="indent">role: <span class="code-green">'Web Developer'</span>,</p>
+                        <p class="indent">name: <span class="code-green">'{{ site.hero_name }}'</span>,</p>
+                        <p class="indent">role: <span class="code-green">'{{ site.hero_role }}'</span>,</p>
                         <p class="indent">creative: <span class="code-orange">true</span>,</p>
                         <p class="indent">focused: <span class="code-orange">true</span></p>
                         <p>};</p>
@@ -99,39 +98,33 @@
 
         <section id="about" class="section content-section">
             <p class="eyebrow">01 — ABOUT ME</p>
-            <h2 class="section-title">Turning ideas into <span>digital reality.</span></h2>
+            <h2 class="section-title">{{ site.about_title }}</h2>
 
             <div class="about-grid">
                 <p class="section-description">
-                    I'm a Computer Science student and aspiring web developer
-                    passionate about building practical digital solutions.
-                    I enjoy turning ideas into clean, responsive websites
-                    and continuously improving my development skills.
+                    {{ site.about_description }}
                 </p>
 
                 <div class="about-stats">
                     <div class="stat-card">
-                        <strong>01</strong>
-                        <span>Creative mindset</span>
+                        <strong>{{ site.about_stat_1_value }}</strong>
+                        <span>{{ site.about_stat_1_label }}</span>
                     </div>
                     <div class="stat-card">
-                        <strong>100%</strong>
-                        <span>Commitment to learning</span>
+                        <strong>{{ site.about_stat_2_value }}</strong>
+                        <span>{{ site.about_stat_2_label }}</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="resume" class="section content-section">
-    <p class="eyebrow">MY RESUME</p>
+    <p class="eyebrow">{{ site.resume_eyebrow }}</p>
 
-    <h2 class="section-title">
-        Explore My <span>Resume.</span>
-    </h2>
+    <h2 class="section-title">{{ site.resume_title }}</h2>
 
     <p class="section-description">
-        Download my resume to learn more about my skills,
-        education, projects and experience.
+        {{ site.resume_description }}
     </p>
 
     {% if resume_available %}
@@ -139,8 +132,8 @@
             <div class="resume-icon">📄</div>
 
             <div class="resume-info">
-                <h3>Ankush Jorvekar</h3>
-                <p>Web Developer | BCS Student</p>
+                <h3>{{ site.resume_name }}</h3>
+                <p>{{ site.resume_subtitle }}</p>
             </div>
 
             <a
@@ -167,55 +160,39 @@
 
         <section id="skills" class="section content-section">
             <p class="eyebrow">02 — MY TOOLKIT</p>
-            <h2 class="section-title">Skills & <span>technologies.</span></h2>
-            <p class="section-description">Technologies I use to build and improve web experiences.</p>
+            <h2 class="section-title">{{ site.skills_title }}</h2>
+            <p class="section-description">{{ site.skills_description }}</p>
 
             <div class="skills-grid">
-                <div class="skill-card"><span>01</span><h3>HTML5</h3><p>Semantic structure</p></div>
-                <div class="skill-card"><span>02</span><h3>CSS3</h3><p>Responsive styling</p></div>
-                <div class="skill-card"><span>03</span><h3>JavaScript</h3><p>Interactive interfaces</p></div>
-                <div class="skill-card"><span>04</span><h3>Python</h3><p>Backend development</p></div>
-                <div class="skill-card"><span>05</span><h3>Flask</h3><p>Web applications</p></div>
-                <div class="skill-card"><span>06</span><h3>SQL / SQLite</h3><p>Database basics</p></div>
-                <div class="skill-card"><span>07</span><h3>Node.js</h3><p>Server-side JavaScript</p></div>
-                <div class="skill-card"><span>08</span><h3>Git & GitHub</h3><p>Version control</p></div>
+                {% for skill in site.skills_items %}
+                    <div class="skill-card">
+                        <span>{{ "%02d"|format(loop.index) }}</span>
+                        <h3>{{ skill[0] }}</h3>
+                        <p>{{ skill[1] }}</p>
+                    </div>
+                {% endfor %}
             </div>
         </section>
 
         <section id="projects" class="section content-section">
             <p class="eyebrow">03 — SELECTED WORK</p>
-            <h2 class="section-title">Projects I've <span>worked on.</span></h2>
+            <h2 class="section-title">{{ site.projects_title }}</h2>
 
             <div class="projects-grid">
-                <article class="project-card">
-                    <div class="project-number">PROJECT 01</div>
-                    <div class="project-icon">⚡</div>
-                    <h3>SportZone</h3>
-                    <p>
-                        An online sports shop concept for browsing sports
-                        products and exploring an e-commerce experience.
-                    </p>
-                    <div class="project-tags">
-                        <span>Web Development</span>
-                        <span>Database</span>
-                    </div>
-                    <a href="#contact" class="text-link">Discuss a similar project ↗</a>
-                </article>
-
-                <article class="project-card">
-                    <div class="project-number">PROJECT 02</div>
-                    <div class="project-icon">✦</div>
-                    <h3>Business Websites</h3>
-                    <p>
-                        Responsive website concepts that help small businesses
-                        present their services and contact information online.
-                    </p>
-                    <div class="project-tags">
-                        <span>HTML & CSS</span>
-                        <span>JavaScript</span>
-                    </div>
-                    <a href="#contact" class="text-link">Discuss a website ↗</a>
-                </article>
+                {% for project in site.project_items %}
+                    <article class="project-card">
+                        <div class="project-number">PROJECT {{ "%02d"|format(loop.index) }}</div>
+                        <div class="project-icon">{{ project[3] }}</div>
+                        <h3>{{ project[0] }}</h3>
+                        <p>{{ project[1] }}</p>
+                        <div class="project-tags">
+                            {% for tag in project[2].split(",") %}
+                                <span>{{ tag.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                        <a href="#contact" class="text-link">Discuss a similar project ↗</a>
+                    </article>
+                {% endfor %}
                 {% for demo in demos %}
                     <article class="project-card">
                         <div class="project-number">LIVE DEMO</div>
@@ -240,51 +217,23 @@
 
         <section id="services" class="section content-section">
             <p class="eyebrow">04 — WHAT I OFFER</p>
-            <h2 class="section-title">Services built around <span>your goals.</span></h2>
+            <h2 class="section-title">{{ site.services_title }}</h2>
 
             <div class="services-grid">
-                <div class="service-card">
-                    <span class="service-icon">⌘</span>
-                    <h3>Website Development</h3>
-                    <p>I create modern, responsive, and user-friendly websites for businesses, startups, and individuals.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">◈</span>
-                    <h3>Photography &amp; Studio Websites</h3>
-                    <p>I build professional photography websites with image galleries, portfolio sections, and enquiry forms.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">↗</span>
-                    <h3>E-commerce Development</h3>
-                    <p>I develop online shopping websites with product catalogs, shopping carts, and admin dashboards.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">✦</span>
-                    <h3>Website Design &amp; Redesign</h3>
-                    <p>I design attractive, mobile-friendly websites that help businesses build a strong online presence.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">&lt;/&gt;</span>
-                    <h3>Backend Development</h3>
-                    <p>I develop functional web applications using Python, Flask, databases, and secure authentication systems.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">⌂</span>
-                    <h3>Business Websites</h3>
-                    <p>I create customized websites for gyms, hotels, restaurants, coaching classes, and local businesses.</p>
-                </div>
-                <div class="service-card">
-                    <span class="service-icon">⚙</span>
-                    <h3>Website Maintenance</h3>
-                    <p>I help businesses maintain their websites through bug fixes, content updates, and performance improvements.</p>
-                </div>
+                {% for service in site.service_items %}
+                    <div class="service-card">
+                        <span class="service-icon">{{ service[0] }}</span>
+                        <h3>{{ service[1] }}</h3>
+                        <p>{{ service[2] }}</p>
+                    </div>
+                {% endfor %}
             </div>
         </section>
 
         <section id="certificates" class="section content-section">
             <p class="eyebrow">05 — LEARNING &amp; ACHIEVEMENTS</p>
-            <h2 class="section-title">Certificates &amp; <span>achievements.</span></h2>
-            <p class="section-description">Courses and credentials that support my work.</p>
+            <h2 class="section-title">{{ site.certificates_title }}</h2>
+            <p class="section-description">{{ site.certificates_description }}</p>
 
             {% if certificates %}
                 <div class="certificates-grid">
@@ -314,9 +263,9 @@
 
         <section id="contact" class="section contact-section">
             <p class="eyebrow">06 — GET IN TOUCH</p>
-            <h2 class="section-title">Have a project in mind? <span>Let's talk.</span></h2>
+            <h2 class="section-title">{{ site.contact_title }}</h2>
             <p class="section-description">
-                Tell me a little about your project. I'll get back to you as soon as possible.
+                {{ site.contact_description }}
             </p>
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -358,14 +307,14 @@
 
     <footer class="footer">
         <a href="#home" class="logo">Ankush<span>.</span></a>
-        <p>Designed & built by Ankush Jorvekar.</p>
+        <p>{{ site.footer_credit }}</p>
         <a href="#home" class="back-top">Back to top ↑</a>
         <a href="{{ url_for('admin_login') }}" class="footer-admin-login">Admin Login</a>
     </footer>
 
     <a
         class="whatsapp-button"
-        href="https://wa.me/918805129067?text=Hi%20Ankush%2C%20I%27d%20like%20to%20discuss%20a%20project."
+        href="https://wa.me/{{ site.whatsapp_number }}?text=Hi%20I%27d%20like%20to%20discuss%20a%20project."
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with Ankush on WhatsApp"

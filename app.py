@@ -1,5 +1,6 @@
 
 import os
+import re
 import secrets
 import time
 from functools import wraps
@@ -76,6 +77,43 @@ RESUME_UPLOAD_DIR = DATA_DIR / "uploads" / "resume"
 RESUME_UPLOAD_PATH = RESUME_UPLOAD_DIR / "resume.pdf"
 BUNDLED_RESUME_PATH = BASE_DIR / "static" / "uploads" / "resume" / "resume.pdf"
 MAX_RESUME_SIZE = 5 * 1024 * 1024
+PROFILE_UPLOAD_DIR = DATA_DIR / "uploads" / "profile"
+MAX_PROFILE_SIZE = 5 * 1024 * 1024
+
+SITE_DEFAULTS = {
+    "meta_description": "Ankush Jorvekar - Web Developer building modern, responsive websites.",
+    "hero_status": "AVAILABLE FOR FREELANCE WORK",
+    "hero_intro": "Hi, I'm",
+    "hero_name": "Ankush Jorvekar.",
+    "hero_role": "I build modern digital experiences.",
+    "hero_description": "I'm a web developer creating responsive, user-friendly websites that help businesses build their online presence.",
+    "hero_tags": "Web Development\nUI Design\nProblem Solving",
+    "about_title": "Turning ideas into digital reality.",
+    "about_description": "I'm a Computer Science student and aspiring web developer passionate about building practical digital solutions. I enjoy turning ideas into clean, responsive websites and continuously improving my development skills.",
+    "about_stat_1_value": "01",
+    "about_stat_1_label": "Creative mindset",
+    "about_stat_2_value": "100%",
+    "about_stat_2_label": "Commitment to learning",
+    "resume_eyebrow": "MY RESUME",
+    "resume_title": "Explore My Resume.",
+    "resume_description": "Download my resume to learn more about my skills, education, projects and experience.",
+    "resume_name": "Ankush Jorvekar",
+    "resume_subtitle": "Web Developer | BCS Student",
+    "skills_title": "Skills & technologies.",
+    "skills_description": "Technologies I use to build and improve web experiences.",
+    "skills": "HTML5 | Semantic structure\nCSS3 | Responsive styling\nJavaScript | Interactive interfaces\nPython | Backend development\nFlask | Web applications\nSQL / SQLite | Database basics\nNode.js | Server-side JavaScript\nGit & GitHub | Version control",
+    "projects_title": "Projects I've worked on.",
+    "projects": "SportZone | An online sports shop concept for browsing sports products and exploring an e-commerce experience. | Web Development, Database | ⚡\nBusiness Websites | Responsive website concepts that help small businesses present their services and contact information online. | HTML & CSS, JavaScript | ✦",
+    "services_title": "Services built around your goals.",
+    "services": "⌘ | Website Development | I create modern, responsive, and user-friendly websites for businesses, startups, and individuals.\n◈ | Photography & Studio Websites | I build professional photography websites with image galleries, portfolio sections, and enquiry forms.\n↗ | E-commerce Development | I develop online shopping websites with product catalogs, shopping carts, and admin dashboards.\n✦ | Website Design & Redesign | I design attractive, mobile-friendly websites that help businesses build a strong online presence.\n</> | Backend Development | I develop functional web applications using Python, Flask, databases, and secure authentication systems.\n⌂ | Business Websites | I create customized websites for gyms, hotels, restaurants, coaching classes, and local businesses.\n⚙ | Website Maintenance | I help businesses maintain their websites through bug fixes, content updates, and performance improvements.",
+    "certificates_title": "Certificates & achievements.",
+    "certificates_description": "Courses and credentials that support my work.",
+    "contact_title": "Have a project in mind? Let's talk.",
+    "contact_description": "Tell me a little about your project. I'll get back to you as soon as possible.",
+    "whatsapp_number": "918805129067",
+    "footer_credit": "Designed & built by Ankush Jorvekar.",
+    "profile_image": "",
+}
 
 
 # Contact enquiries
@@ -125,6 +163,39 @@ class Certificate(db.Model):
     issuer = db.Column(db.String(120), nullable=False)
     year = db.Column(db.String(4))
     url = db.Column(db.String(2048), nullable=False)
+
+
+class SiteSetting(db.Model):
+    key = db.Column(db.String(80), primary_key=True)
+    value = db.Column(db.Text, nullable=False)
+
+
+def get_site_content():
+    site = SITE_DEFAULTS.copy()
+    site.update({
+        setting.key: setting.value
+        for setting in SiteSetting.query.all()
+        if setting.key in SITE_DEFAULTS
+    })
+    site["hero_tag_items"] = [
+        item.strip() for item in site["hero_tags"].splitlines() if item.strip()
+    ]
+    site["skills_items"] = parse_site_rows(site["skills"], 2)
+    site["project_items"] = parse_site_rows(site["projects"], 4)
+    site["service_items"] = parse_site_rows(site["services"], 3)
+    return site
+
+
+def parse_site_rows(value, expected_columns):
+    rows = []
+    for line in value.splitlines():
+        if not line.strip():
+            continue
+        columns = [column.strip() for column in line.split("|")]
+        if len(columns) != expected_columns or any(not column for column in columns):
+            continue
+        rows.append(columns)
+    return rows
 
 
 def login_required(view):
@@ -206,6 +277,11 @@ def uploaded_resume(filename):
     return send_from_directory(RESUME_UPLOAD_DIR, filename)
 
 
+@app.route("/uploads/profile/<path:filename>")
+def uploaded_profile_image(filename):
+    return send_from_directory(PROFILE_UPLOAD_DIR, filename)
+
+
 
 @app.route("/")
 def home():
@@ -215,6 +291,7 @@ def home():
         "index.html",
         demos=demos,
         certificates=certificates,
+        site=get_site_content(),
         resume_available=(
             RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
         )
@@ -429,6 +506,128 @@ def admin_dashboard():
     )
 
 
+@app.route("/admin/site/edit", methods=["GET", "POST"])
+@login_required
+def edit_site():
+    if request.method == "POST":
+        values = {
+            key: request.form.get(key, "").strip()
+            for key in SITE_DEFAULTS
+            if key != "profile_image"
+        }
+        required_text = (
+            "hero_name", "hero_role", "about_title", "resume_title",
+            "skills_title", "projects_title", "services_title",
+            "certificates_title", "contact_title",
+        )
+        if any(not values[key] for key in required_text):
+            flash("Please fill in all required headings and names.", "error")
+            return redirect(url_for("edit_site"))
+
+        text_limits = {
+            key: 1000 for key in values
+        }
+        text_limits.update({
+            "meta_description": 300,
+            "hero_description": 1000,
+            "about_description": 2000,
+            "skills": 8000,
+            "projects": 8000,
+            "services": 8000,
+            "hero_tags": 1000,
+        })
+        if any(len(value) > text_limits[key] for key, value in values.items()):
+            flash("Some site content is too long. Shorten it and try again.", "error")
+            return redirect(url_for("edit_site"))
+
+        list_specs = (
+            ("skills", 2, 20),
+            ("projects", 4, 12),
+            ("services", 3, 20),
+        )
+        for key, columns, max_rows in list_specs:
+            nonempty_lines = [
+                line for line in values[key].splitlines() if line.strip()
+            ]
+            parsed_rows = parse_site_rows(values[key], columns)
+            if len(parsed_rows) != len(nonempty_lines) or len(parsed_rows) > max_rows:
+                flash(
+                    f"Check the {key} list format and maximum number of entries.",
+                    "error",
+                )
+                return redirect(url_for("edit_site"))
+
+        tag_items = [item.strip() for item in values["hero_tags"].splitlines() if item.strip()]
+        if len(tag_items) > 10 or any(len(item) > 60 for item in tag_items):
+            flash("Use no more than 10 short hero tags.", "error")
+            return redirect(url_for("edit_site"))
+
+        whatsapp_number = values["whatsapp_number"]
+        if not re.fullmatch(r"[0-9]{8,15}", whatsapp_number):
+            flash("Enter the WhatsApp number with country code, digits only.", "error")
+            return redirect(url_for("edit_site"))
+
+        uploaded_image = request.files.get("profile_image")
+        image_data = None
+        image_extension = None
+        if uploaded_image and uploaded_image.filename:
+            image_data = uploaded_image.stream.read(MAX_PROFILE_SIZE + 1)
+            if len(image_data) > MAX_PROFILE_SIZE:
+                flash("Profile photos must be 5 MB or smaller.", "error")
+                return redirect(url_for("edit_site"))
+
+            image_types = (
+                (b"\xff\xd8\xff", "jpg"),
+                (b"\x89PNG\r\n\x1a\n", "png"),
+                (b"GIF87a", "gif"),
+                (b"GIF89a", "gif"),
+            )
+            image_extension = next(
+                (
+                    extension for signature, extension in image_types
+                    if image_data.startswith(signature)
+                ),
+                None,
+            )
+            if image_extension is None and len(image_data) >= 12:
+                if image_data[:4] == b"RIFF" and image_data[8:12] == b"WEBP":
+                    image_extension = "webp"
+            if image_extension is None:
+                flash("Upload a valid JPG, PNG, GIF, or WebP profile photo.", "error")
+                return redirect(url_for("edit_site"))
+
+        if image_data is not None:
+            PROFILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+            image_filename = f"{uuid4().hex}.{image_extension}"
+            image_path = PROFILE_UPLOAD_DIR / image_filename
+            image_path.write_bytes(image_data)
+            values["profile_image"] = image_filename
+        else:
+            values["profile_image"] = SiteSetting.query.filter_by(
+                key="profile_image"
+            ).with_entities(SiteSetting.value).scalar() or ""
+
+        try:
+            for key, value in values.items():
+                setting = db.session.get(SiteSetting, key)
+                if setting is None:
+                    setting = SiteSetting(key=key, value=value)
+                    db.session.add(setting)
+                else:
+                    setting.value = value
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            if image_data is not None:
+                image_path.unlink(missing_ok=True)
+            raise
+
+        flash("Portfolio content updated.", "success")
+        return redirect(url_for("edit_site"))
+
+    return render_template("site_editor.html", site=get_site_content())
+
+
 @app.route("/admin/demos/add", methods=["POST"])
 @login_required
 def add_demo():
@@ -603,6 +802,9 @@ def delete_resume():
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
+    if request.endpoint == "edit_site":
+        flash("Profile photos must be 5 MB or smaller.", "error")
+        return redirect(url_for("edit_site"))
     if request.endpoint == "add_certificate":
         flash("Certificate images must be 5 MB or smaller.", "error")
         return redirect(url_for("admin_dashboard"))

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Site | Ankush Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .editor-main {
+            max-width: 1000px;
+            margin: auto;
+            padding: 42px 24px 70px;
+        }
+
+        .editor-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 26px;
+        }
+
+        .editor-heading h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(28px, 4vw, 38px);
+        }
+
+        .editor-heading p,
+        .editor-help {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .editor-panel {
+            margin-top: 20px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+        }
+
+        .editor-panel h2 {
+            margin-bottom: 6px;
+            font-size: 19px;
+        }
+
+        .editor-help {
+            margin-bottom: 18px;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .editor-grid .form-group,
+        .editor-panel > .form-group {
+            margin: 0;
+        }
+
+        .editor-grid .wide {
+            grid-column: 1 / -1;
+        }
+
+        .editor-panel input,
+        .editor-panel textarea {
+            width: 100%;
+            padding: 12px 14px;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+        }
+
+        .editor-panel textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .editor-image {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .editor-image img {
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--purple);
+        }
+
+        .editor-submit {
+            position: sticky;
+            bottom: 16px;
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 20px;
+        }
+
+        @media (max-width: 650px) {
+            .editor-main {
+                padding: 30px 16px 50px;
+            }
+
+            .editor-panel {
+                padding: 18px;
+            }
+
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-grid .wide {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <a href="{{ url_for('home') }}" class="logo">Ankush<span>.</span></a>
+        <div class="dashboard-actions">
+            <span style="color: var(--muted); font-size: 13px;">
+                Admin: {{ session.get('admin_username', 'Admin') }}
+            </span>
+            <a href="{{ url_for('admin_dashboard') }}" class="button secondary">Dashboard</a>
+        </div>
+    </header>
+
+    <main class="editor-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="dashboard-flashes">
+                    {% for category, message in messages %}
+                        <p class="flash-message {{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="editor-heading">
+            <div>
+                <p class="eyebrow">PORTFOLIO CONTENT</p>
+                <h1>Edit Site</h1>
+                <p>Changes are saved to the portfolio database and appear on the site without a code deploy.</p>
+            </div>
+            <a href="{{ url_for('home') }}" class="button secondary" target="_blank" rel="noopener noreferrer">Preview Site ↗</a>
+        </div>
+
+        <form action="{{ url_for('edit_site') }}" method="POST" enctype="multipart/form-data">
+            <section class="editor-panel">
+                <h2>Profile and home section</h2>
+                <p class="editor-help">Use the photo upload to replace your profile picture. Maximum image size: 5 MB.</p>
+                <div class="editor-image">
+                    <img
+                        src="{% if site.profile_image %}{{ url_for('uploaded_profile_image', filename=site.profile_image) }}{% else %}{{ url_for('static', filename='css/image/Profile.jpeg') }}{% endif %}"
+                        alt="Current profile photo"
+                    >
+                    <div class="form-group">
+                        <label for="profile-image">New profile photo</label>
+                        <input id="profile-image" name="profile_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+                    </div>
+                </div>
+                <div class="editor-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="meta-description">Browser description</label>
+                        <input id="meta-description" name="meta_description" maxlength="300" value="{{ site.meta_description }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="hero-status">Availability status</label>
+                        <input id="hero-status" name="hero_status" maxlength="100" value="{{ site.hero_status }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="hero-intro">Introduction</label>
+                        <input id="hero-intro" name="hero_intro" maxlength="1000" value="{{ site.hero_intro }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="hero-name">Name</label>
+                        <input id="hero-name" name="hero_name" maxlength="1000" value="{{ site.hero_name }}" required>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="hero-role">Main heading</label>
+                        <input id="hero-role" name="hero_role" maxlength="1000" value="{{ site.hero_role }}" required>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="hero-description">Introduction text</label>
+                        <textarea id="hero-description" name="hero_description" maxlength="1000">{{ site.hero_description }}</textarea>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="hero-tags">Home page tags (one per line, maximum 10)</label>
+                        <textarea id="hero-tags" name="hero_tags" maxlength="1000">{{ site.hero_tags }}</textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="editor-panel">
+                <h2>About section</h2>
+                <div class="editor-grid">
+                    <div class="form-group wide">
+                        <label for="about-title">Heading</label>
+                        <input id="about-title" name="about_title" maxlength="1000" value="{{ site.about_title }}" required>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="about-description">About text</label>
+                        <textarea id="about-description" name="about_description" maxlength="2000">{{ site.about_description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-one-value">First statistic</label>
+                        <input id="stat-one-value" name="about_stat_1_value" maxlength="1000" value="{{ site.about_stat_1_value }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-one-label">First statistic label</label>
+                        <input id="stat-one-label" name="about_stat_1_label" maxlength="1000" value="{{ site.about_stat_1_label }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-two-value">Second statistic</label>
+                        <input id="stat-two-value" name="about_stat_2_value" maxlength="1000" value="{{ site.about_stat_2_value }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-two-label">Second statistic label</label>
+                        <input id="stat-two-label" name="about_stat_2_label" maxlength="1000" value="{{ site.about_stat_2_label }}">
+                    </div>
+                </div>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Resume section</h2>
+                <div class="editor-grid">
+                    <div class="form-group">
+                        <label for="resume-eyebrow">Small heading</label>
+                        <input id="resume-eyebrow" name="resume_eyebrow" maxlength="1000" value="{{ site.resume_eyebrow }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="resume-title">Heading</label>
+                        <input id="resume-title" name="resume_title" maxlength="1000" value="{{ site.resume_title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resume-name">Name shown on resume card</label>
+                        <input id="resume-name" name="resume_name" maxlength="1000" value="{{ site.resume_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="resume-subtitle">Subtitle</label>
+                        <input id="resume-subtitle" name="resume_subtitle" maxlength="1000" value="{{ site.resume_subtitle }}">
+                    </div>
+                    <div class="form-group wide">
+                        <label for="resume-description">Description</label>
+                        <textarea id="resume-description" name="resume_description" maxlength="1000">{{ site.resume_description }}</textarea>
+                    </div>
+                </div>
+                <p class="editor-help">Upload or replace the PDF itself from the dashboard's Manage Resume section.</p>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Skills</h2>
+                <div class="editor-grid">
+                    <div class="form-group wide">
+                        <label for="skills-title">Heading</label>
+                        <input id="skills-title" name="skills_title" maxlength="1000" value="{{ site.skills_title }}" required>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="skills-description">Description</label>
+                        <input id="skills-description" name="skills_description" maxlength="1000" value="{{ site.skills_description }}">
+                    </div>
+                    <div class="form-group wide">
+                        <label for="skills">Skills (one per line: name | description)</label>
+                        <textarea id="skills" name="skills" maxlength="8000">{{ site.skills }}</textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Projects</h2>
+                <div class="form-group">
+                    <label for="projects-title">Heading</label>
+                    <input id="projects-title" name="projects_title" maxlength="1000" value="{{ site.projects_title }}" required>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="projects">One project per line: name | description | tag1, tag2 | icon (maximum 12)</label>
+                    <textarea id="projects" name="projects" maxlength="8000">{{ site.projects }}</textarea>
+                </div>
+                <p class="editor-help">Live demo websites are managed from the dashboard's Manage Portfolio Demos section.</p>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Services</h2>
+                <div class="form-group">
+                    <label for="services-title">Heading</label>
+                    <input id="services-title" name="services_title" maxlength="1000" value="{{ site.services_title }}" required>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="services">One service per line: icon | name | description (maximum 20)</label>
+                    <textarea id="services" name="services" maxlength="8000">{{ site.services }}</textarea>
+                </div>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Certificates section</h2>
+                <div class="editor-grid">
+                    <div class="form-group">
+                        <label for="certificates-title">Heading</label>
+                        <input id="certificates-title" name="certificates_title" maxlength="1000" value="{{ site.certificates_title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificates-description">Description</label>
+                        <input id="certificates-description" name="certificates_description" maxlength="1000" value="{{ site.certificates_description }}">
+                    </div>
+                </div>
+                <p class="editor-help">Add and remove certificate images from the dashboard's Manage Certificates section.</p>
+            </section>
+
+            <section class="editor-panel">
+                <h2>Contact and footer</h2>
+                <div class="editor-grid">
+                    <div class="form-group wide">
+                        <label for="contact-title">Contact heading</label>
+                        <input id="contact-title" name="contact_title" maxlength="1000" value="{{ site.contact_title }}" required>
+                    </div>
+                    <div class="form-group wide">
+                        <label for="contact-description">Contact description</label>
+                        <textarea id="contact-description" name="contact_description" maxlength="1000">{{ site.contact_description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="whatsapp-number">WhatsApp number (country code, digits only)</label>
+                        <input id="whatsapp-number" name="whatsapp_number" inputmode="numeric" maxlength="15" value="{{ site.whatsapp_number }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="footer-credit">Footer text</label>
+                        <input id="footer-credit" name="footer_credit" maxlength="1000" value="{{ site.footer_credit }}">
+                    </div>
+                </div>
+            </section>
+
+            <div class="editor-submit">
+                <button type="submit" class="button primary">Save Site Changes</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

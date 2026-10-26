@@ -20,6 +20,10 @@ python app.py
 Keep the credentials private and do not commit them. On first startup, the app
 creates the database and the admin account when both admin variables are set.
 Open `http://127.0.0.1:5000/admin/login` and sign in with those credentials.
+From the admin dashboard, use **Edit Site** to update portfolio text, skills,
+projects, services, contact details, and the profile photo without changing
+code. Resume, certificates, and live demo entries remain managed in their
+respective dashboard sections.
 For production, set a long random `SECRET_KEY` in the hosting provider's
 environment settings so sessions stay valid across instances and deployments.
 The app does not change an existing admin password when these variables change;
@@ -37,7 +41,8 @@ or deploy.
    random `SECRET_KEY`, and set `ADMIN_USERNAME` and `ADMIN_PASSWORD` if this
    is the first admin account.
 3. Deploy the updated app. It stores the SQLite database (including live demo
-   projects), certificate images, and uploaded resume under that directory.
+   projects and editable site content), certificate/profile images, and
+   uploaded resume under that directory.
 4. In `/admin/login`, add a live demo under **Manage Portfolio Demos**; it
    appears in the public **Projects** section. Upload a resume or certificate,
    then reload the service and confirm the project and files remain.
