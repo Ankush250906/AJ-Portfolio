@@ -44,8 +44,6 @@
                 <div class="hero-buttons">
                     <a href="#projects" class="button primary">Explore My Work ↗</a>
                     <a href="#contact" class="button secondary">Let's Talk</a>
-                    <a href="#resume" class="button secondary">View Resume ↗</a>
-                    <a href="#certificates" class="button secondary">View Certificates ↗</a>
                 </div>
 
                 <div class="hero-tags">
@@ -303,7 +301,7 @@
                                 <h3>{{ certificate.title }}</h3>
                                 <p>{{ certificate.issuer }}{% if certificate.year %} · {{ certificate.year }}{% endif %}</p>
                             </div>
-                            <a href="{{ certificate.url }}" class="text-link" target="_blank" rel="noopener noreferrer">
+                            <a href="{{ certificate.url }}" class="button secondary text-link" target="_blank" rel="noopener noreferrer">
                                 View Certificate ↗
                             </a>
                         </article>
