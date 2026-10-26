@@ -249,8 +249,8 @@ def contact():
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
-    if "admin_id" in session:
-        return redirect(url_for("admin_dashboard"))
+    if request.method == "GET" and "admin_id" in session:
+        session.clear()
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
