@@ -298,21 +298,16 @@
                 </div>
             </form>
 
-            {% if resume_uploaded %}
+            {% if resume_available %}
                 <div class="panel-header">
                     <form action="{{ url_for('delete_resume') }}" method="POST">
-                        <button type="submit" class="demo-delete-button">Remove Uploaded Resume</button>
+                        <button type="submit" class="demo-delete-button">Remove Resume from Portfolio</button>
                     </form>
-                </div>
-            {% elif resume_available %}
-                <div class="empty-state">
-                    <strong>Bundled resume is available</strong>
-                    It remains visible even if no replacement has been uploaded.
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <strong>No resume uploaded</strong>
-                    Upload a PDF to enable the public View and Download buttons.
+                    <strong>No resume is visible</strong>
+                    Upload a PDF to show the View and Download buttons on your portfolio.
                 </div>
             {% endif %}
         </section>

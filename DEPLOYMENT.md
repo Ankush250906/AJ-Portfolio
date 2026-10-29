@@ -47,10 +47,12 @@ or deploy.
    appears in the public **Projects** section. Upload a resume or certificate,
    then reload the service and confirm the project and files remain.
 
-The repository's bundled `static/uploads/resume/resume.pdf` is shown whenever
-there is no uploaded replacement, so the public Resume section remains
-available even after a service restart. To keep a resume uploaded through the
-admin page across deploys and restarts, the Persistent Disk is required.
+The repository's bundled `static/uploads/resume/resume.pdf` is shown by default.
+Removing the resume from the admin dashboard hides it from the portfolio until
+another PDF is uploaded. The uploaded file and this removal state are stored in
+`DATA_DIR`; a Render Persistent Disk is required to keep uploads and removals
+across deploys and restarts. Certificate records and images are also stored
+there and need the same persistent storage.
 
 If your current SQLite database or uploaded images are only on Render's
 temporary filesystem, back them up before changing the service or deploying.

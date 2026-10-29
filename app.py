@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from flask import (
     Flask, render_template, request,
-    redirect, url_for, flash, session, send_from_directory
+    redirect, url_for, flash, session, send_from_directory, abort
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
@@ -186,6 +186,22 @@ def get_site_content():
     return site
 
 
+def is_resume_available():
+    removed_setting = db.session.get(SiteSetting, "resume_removed")
+    if removed_setting and removed_setting.value == "true":
+        return False
+    return RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
+
+
+def set_resume_removed(removed):
+    setting = db.session.get(SiteSetting, "resume_removed")
+    if setting is None:
+        setting = SiteSetting(key="resume_removed", value=str(removed).lower())
+        db.session.add(setting)
+    else:
+        setting.value = str(removed).lower()
+
+
 def parse_site_rows(value, expected_columns):
     rows = []
     for line in value.splitlines():
@@ -272,6 +288,8 @@ def uploaded_certificate(filename):
 
 @app.route("/static/uploads/resume/<path:filename>")
 def uploaded_resume(filename):
+    if filename == "resume.pdf" and not is_resume_available():
+        abort(404)
     if filename == "resume.pdf" and not RESUME_UPLOAD_PATH.is_file():
         return send_from_directory(BUNDLED_RESUME_PATH.parent, filename)
     return send_from_directory(RESUME_UPLOAD_DIR, filename)
@@ -292,9 +310,7 @@ def home():
         demos=demos,
         certificates=certificates,
         site=get_site_content(),
-        resume_available=(
-            RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
-        )
+        resume_available=is_resume_available()
     )
 
 
@@ -499,10 +515,7 @@ def admin_dashboard():
         total_enquiries=len(enquiries),
         demos=demos,
         certificates=certificates,
-        resume_available=(
-            RESUME_UPLOAD_PATH.is_file() or BUNDLED_RESUME_PATH.is_file()
-        ),
-        resume_uploaded=RESUME_UPLOAD_PATH.is_file()
+        resume_available=is_resume_available()
     )
 
 
@@ -784,7 +797,22 @@ def upload_resume():
         return redirect(url_for("admin_dashboard"))
 
     RESUME_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    previous_resume = (
+        RESUME_UPLOAD_PATH.read_bytes()
+        if RESUME_UPLOAD_PATH.is_file()
+        else None
+    )
     RESUME_UPLOAD_PATH.write_bytes(resume_data)
+    try:
+        set_resume_removed(False)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        if previous_resume is None:
+            RESUME_UPLOAD_PATH.unlink(missing_ok=True)
+        else:
+            RESUME_UPLOAD_PATH.write_bytes(previous_resume)
+        raise
 
     flash("Resume uploaded successfully.", "success")
     return redirect(url_for("admin_dashboard"))
@@ -793,8 +821,22 @@ def upload_resume():
 @app.route("/admin/resume/delete", methods=["POST"])
 @login_required
 def delete_resume():
-    if RESUME_UPLOAD_PATH.is_file():
+    resume_data = (
+        RESUME_UPLOAD_PATH.read_bytes()
+        if RESUME_UPLOAD_PATH.is_file()
+        else None
+    )
+    if resume_data is not None:
         RESUME_UPLOAD_PATH.unlink()
+
+    try:
+        set_resume_removed(True)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        if resume_data is not None:
+            RESUME_UPLOAD_PATH.write_bytes(resume_data)
+        raise
 
     flash("Resume removed from your portfolio.", "success")
     return redirect(url_for("admin_dashboard"))
